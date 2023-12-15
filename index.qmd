@@ -23,5 +23,5 @@ Note that
 4) Since restaurants out of business are removed, this project is not about comparison with the past inspection results for NYC restaurants. Also, the score can be revised due to adjudication, it is not valid to compare current scores to scores from previous years. 
 
 5) Letter grading inspections were put on pause from March 17, 2020 to July 19, 2021, due to the COVID-19 public health emergency. Modified restaurant inspections occurred during this time.   
-
+   
 
