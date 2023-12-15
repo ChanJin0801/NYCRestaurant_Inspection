@@ -96,7 +96,7 @@ d3.json("https://raw.githubusercontent.com/ChanJin0801/NYCRestaurant_Inspection/
               .style("visibility", "visible")
               .style("left", (event.pageX + 10) + "px")
               .style("top", (event.pageY - 28) + "px")
-              .html("Restaurant Name: " + d.Restaurant_Name + "<br/>" + "Critical_Flag_Proportion: " + Math.round(d.Critical_Flag_Proportion,2));
+              .html("Restaurant Name: " + d.Restaurant_Name + "<br/>" + "Critical_Flag_Proportion: " + Math.floor(d.Critical_Flag_Proportion * 100) / 100);
         });
         });
     });
