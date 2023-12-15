@@ -6,11 +6,11 @@ execute:
   echo: true
 
 book:
-  title: "YOUR PROJECT TITLE"
+  title: "NYCRestaurant_Inspection"
   author:
-    - AUTHOR1 (UNI1)
-    - AUTHOR2 (UNI2)
-  repo-url: https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME
+    - Chanjin Park (cp3366)
+    - Ta-Wei Huang (th3061)
+  repo-url: https://github.com/ChanJin0801/NYCRestaurant_Inspection
   date: today
   page-footer:
     right: |

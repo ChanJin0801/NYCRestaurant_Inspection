@@ -4,10 +4,44 @@
   * {
     font-family: sans-serif;
   }
+  .district:hover {
+    fill: #507afa   ; 
+  }
+  .restaurant:hover {
+    cursor: pointer;
+  }
+  .district {
+    fill: #ccc;
+    stroke: #333;
+    stroke-width: 1px;
+  }
+  #tooltip {
+    position: absolute;
+    visibility: hidden; 
+    background-color: white; 
+    color: black; 
+    padding: 10px;
+    border: 1px solid #ddd;
+    border: 1px solid #ddd;
+    border-radius: 8px; 
+    z-index: 1000; 
+    pointer-events: none; 
+    opacity: 0.85; 
+  }
+  .district-label {
+    fill: grey; 
+    text-anchor: middle;
+    font-size: 12px; 
+    color: grey;
+    
+    }
 </style> 
-
+<button id="zoom_in">Zoom In</button>
+<button id="zoom_out">Zoom Out</button>
+<div id="tooltip"></div>
 <div id="plot">
 </div>
+<div id="comment"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="scripts/myscript.js"></script>

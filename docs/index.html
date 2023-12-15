@@ -6,11 +6,11 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="AUTHOR1 (UNI1)">
-<meta name="author" content="AUTHOR2 (UNI2)">
-<meta name="dcterms.date" content="2023-11-07">
+<meta name="author" content="Chanjin Park (cp3366)">
+<meta name="author" content="Ta-Wei Huang (th3061)">
+<meta name="dcterms.date" content="2023-12-15">
 
-<title>YOUR PROJECT TITLE</title>
+<title>NYCRestaurant_Inspection</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -91,9 +91,9 @@ ul.task-list li input[type="checkbox"] {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">YOUR PROJECT TITLE</a> 
+      <a href="./">NYCRestaurant_Inspection</a> 
         <div class="sidebar-tools-main">
-    <a href="https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME" rel="" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="https://github.com/ChanJin0801/NYCRestaurant_Inspection" rel="" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
 </div>
     </div>
       </div>
@@ -146,14 +146,14 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a></li>
   </ul>
-<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME/edit/main/index.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ChanJin0801/NYCRestaurant_Inspection/edit/main/index.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/ChanJin0801/NYCRestaurant_Inspection/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">YOUR PROJECT TITLE</h1>
+<h1 class="title">NYCRestaurant_Inspection</h1>
 </div>
 
 
@@ -163,15 +163,15 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Authors</div>
     <div class="quarto-title-meta-contents">
-             <p>AUTHOR1 (UNI1) </p>
-             <p>AUTHOR2 (UNI2) </p>
+             <p>Chanjin Park (cp3366) </p>
+             <p>Ta-Wei Huang (th3061) </p>
           </div>
   </div>
     
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">November 7, 2023</p>
+      <p class="date">December 15, 2023</p>
     </div>
   </div>
   
@@ -183,6 +183,22 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="introduction" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Introduction</h1>
+<p>As a current resident in NYC, it is very hard to choose which restaurant to go among countless restaurants in NYC. It might be harder to choose restaurants in NYC to some people, who care about sanitation a lot because of some health issues. The dataset, which includes NYC restaurant and college cafeteria inspection results for up to three years prior to the most recent inspection, can provide information on recent inspection results of current NYC restaurants. This project can be helpful for deciding which restaurants to be visited or not to be visited, especially to people who need to care a lot about their diets and cleanliness.</p>
+<p>The main questions of this project is finding relationship between inspection result (scores, critical flag, legal action) and locations/cuisines.</p>
+<ul>
+<li><p>Are inspection results, especially scores and critical flag, related to locations? Let’s visualize some restaurants by using critical flag proportion on the map for the target audiences.</p></li>
+<li><p>Are inspection results, especially scores, related to cuisines?</p></li>
+<li><p>Chain restaurants have worse inspection scores than independent restaurants?</p></li>
+</ul>
+<p>The dataset contains every sustained or not yet adjudicated violation citation from every full or special food inspection conducted up to three years prior to the most recent inspection for restaurants and college cafeterias in an active status on the RECORD DATE. So only restaurants in an active status are included in the dataset. Restaurants, which have more than one violation in inspection, values for associated fields are repeated for each additional violation record, and each cases are differentiated by their CAMIS (record ID) number. Restaurants, that has applied for a permit but has not yet been inspected and for inspections, result in no violations. Inspection date of 1/1/1900 are new establishments that have not yet received an inspection. Restaurants that received no violations are represented by a single row and coded as having no violations using the ACTION field. The inspection program allows for a two-step inspection process, providing an opportunity for restaurants who do not receive an “A” on their initial inspection to be re-inspected. This re-inspection occurs no less than 7 days after the initial inspection.</p>
+<p>Note that</p>
+<ol type="1">
+<li><p>After the inspections, restaurants can go through the adjudication process or argue their case at an administrative hearing.</p></li>
+<li><p>Restaurants have appeal rights that the entire adjudication process can take several months.</p></li>
+<li><p>Scores current as of today may be revised due to adjudication.</p></li>
+<li><p>Since restaurants out of business are removed, this project is not about comparison with the past inspection results for NYC restaurants. Also, the score can be revised due to adjudication, it is not valid to compare current scores to scores from previous years.</p></li>
+<li><p>Letter grading inspections were put on pause from March 17, 2020 to July 19, 2021, due to the COVID-19 public health emergency. Modified restaurant inspections occurred during this time.</p></li>
+</ol>
 
 
 </section>

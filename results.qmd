@@ -1,1 +1,416 @@
 # Results
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(plotly)
+library(vcd)
+library(vcdExtra)
+library(wordcloud2)
+library(stopwords)
+library(tokenizers)
+library(sf)
+library(tidyverse)
+library(tmap)
+
+# Read Data
+data = read_csv("data.csv")
+nyc_neighborhoods <- st_read("http://data.beta.nyc//dataset/0ff93d2d-90ba-457c-9f7e-39e47bf2ac5f/resource/35dd04fb-81b3-479b-a074-a27a37888ce7/download/d085e2f8d0b54d4590b1e7d1f35594c1pediacitiesnycneighborhoods.geojson", quiet = TRUE)
+```
+
+## Part0: Background: Inspection Scores/Grades
+```{r}
+# inspection score statistics
+count <- length(data$SCORE)
+mean <- mean(data$SCORE, na.rm = TRUE)
+std_dev <- sd(data$SCORE, na.rm = TRUE)
+min_val <- min(data$SCORE, na.rm = TRUE)
+max_val <- max(data$SCORE, na.rm = TRUE)
+
+# Displaying the statistics of inspection score
+cat("Count:", count, "\nMean:", mean, "\nStandard Deviation:", std_dev, "\nMinimum:", min_val, "\nMaximum:", max_val, "\n")
+```
+```{r}
+data %>%
+  drop_na(SCORE) %>%
+  ggplot(aes(x = SCORE)) +
+    geom_histogram(color = "#80593D", fill = "#9FC29F", alpha = .5, bins = 20, boundary=0) +
+    labs(title = "NYC restaurants Inspection Scores Distribution",
+     x = "Inspection Scores") +
+     theme_grey(13)
+```
+Most of the inspection scores are located around mean, which is around 23, and the distribution of the inspection scores is right-skewed. Note that low inspection scores mean good grade, and high inspection scores mean bad grade.
+
+```{r}
+data %>%
+  drop_na(GRADE) %>%
+  filter(GRADE %in% c("A", "B", "C")) %>%
+  ggplot(aes(x = GRADE)) +
+    geom_bar(fill="#9FC29F") +
+    labs(title = "NYC restaurants Inspection Grades Distribution",
+     x = "Inspection Grades") +
+    theme_grey(13)
+```
+Note that there are around 50% missing data in variable GRADE. Among restaurants which have GRADE data, most of the restaurants got grade A.
+
+```{r}
+data %>%
+  drop_na(SCORE, GRADE) %>%
+  filter(GRADE %in% c("A", "B", "C")) %>%
+  ggplot(aes(x = SCORE, y = fct_reorder(GRADE, SCORE, median))) +
+    geom_boxplot(fill="#9FC29F") +
+    labs(title="Inspection Scores by Grades",
+         x="Inspection Scores",
+         y="Grades") +
+    theme_grey(13)
+```
+The visualization matches the expected corresponding grades for scores (A for 0-13, B for 14-27, C for 28+), and there are some unknown grades such as N, P, Z, which are dropped in the visualization. Note that grade C has outliers of low inspection scores, which are expected to get A or better grades.
+
+## Part1: Inspection results by Locations of Restaurants
+```{r}
+data %>%
+  drop_na(SCORE, BORO) %>%
+  ggplot(aes(x = SCORE, y = reorder(BORO,SCORE,median))) +
+    geom_boxplot(fill="#9FC29F") +
+    labs(title="Inspection Scores by BORO",
+         x="Inspection Scores",
+         y="BORO") +
+    theme_grey(13)
+```
+```{r}
+test1 <- chisq.test(data$SCORE, data$BORO)
+print(test1)
+```
+All the boroughs have very similar average inspection scores and distribution. Note that Brooklyn, Manhattan and Queens have some outliers with the highest one in Manhattan. It is hard to tell if there is an association between boroughs and inspection scores by the visualization. However, according to the chi-square test, there is strong evidence, which is very small p-value, that there is association between inspection scores and boroughs.
+
+```{r}
+subset1 <- data %>%
+  filter(GRADE %in% c("A", "B", "C"))
+
+vcd::mosaic(GRADE ~ BORO, subset1, direction = c("v", "h"), highlighting_fill = c("#35E445", "#1B3BF2", "#F2281B"))
+
+test2 <- chisq.test(data$GRADE, data$BORO)
+print(test2)
+```
+Staten Island has the highest proportion of grade A and lowest proportion of C, which seems the best result among all the boroughs. But the majority of the inspections grades are A in all the boroughs, and all the boroughs have similar proportion of grades according to the mosaic plot. It is hard to tell if there is an association between grades and boroughs by the mosaic plot. However, according to the chi-square test, there is strong evidence, which is very small p-value, that there is association between inspection grades and boroughs.
+
+### Average Inspection Scores by Districts
+```{r}
+data$Year = as.Date(data$`GRADE DATE`, format = "%m/%d/%Y")
+data$Year <- format(data$Year, format = "%Y")
+data$Year <- as.numeric(data$Year)
+data1 <- data %>% 
+  filter(!is.na(Year) & !is.na(SCORE) & !is.na(BORO) & Year>2015 & !is.na(`Council District`) & !is.na(DBA) & !is.na(Latitude) & !is.na(Longitude) & !is.na(SCORE) & `Longitude` != 0 & `Latitude` != 0)
+
+
+avg_scores <- data1 %>%
+  group_by(`Council District`) %>%
+  summarize(AvgScore = mean(SCORE))
+avg_scores$`Council District` <- as.character(as.numeric(avg_scores$`Council District`))
+# Read the geojson for NYC, make sure it includes council districts
+nyc_districts <- st_read("NYC_City_Council_Districts.geojson", quiet = TRUE)
+
+# Join the data with the spatial data on council districts
+nyc_districts <- left_join(nyc_districts, avg_scores, by = c("coun_dist" = "Council District"))
+
+# Plotting the map
+ggplot(data = nyc_districts) +
+  geom_sf(aes(fill = AvgScore)) +
+  scale_color_viridis_c(trans = "reverse") +
+  theme_minimal() +
+  labs(title = "NYC Council Districts Map with AvgScore")
+
+```
+The lighter shades on the choropleth map across the districts of Queens suggest lower average scores compared to other boroughs, indicating that the sanitation standards in these areas may require attention and improvement.
+
+### Average Inspection Scores by Boroughs in every year
+```{r, message=FALSE}
+avgscore_bar <- data1 %>% 
+  filter(!is.na(Year) & !is.na(SCORE) & !is.na(BORO) & Year>2015) %>% 
+  group_by(BORO, Year)
+
+avgscore_bar <- avgscore_bar %>%
+  summarize(Avg_Score = round(mean(SCORE, na.rm = TRUE),0))
+
+ggplot(avgscore_bar, aes(fill = BORO, y = Avg_Score, x = Year)) + 
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  theme_minimal() +
+  geom_text(aes(label = Avg_Score), vjust = -0.3, position = position_dodge(width = 0.9), size = 2 ) +
+ 
+  labs(title = "Boroughs - Average Score vs. Year", x = "Years", y = "Average Score") +
+  scale_x_continuous(breaks = 2016:2023, labels = 2016:2023) +
+  scale_fill_brewer(palette = "RdYlBu") + 
+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+Across all boroughs, it appears to be a trend of fluctuating scores from year to year, with no clear pattern of consistent improvement or decline. Queens has a noticeable score of 18 in 2023, suggesting room for improvement recently.
+
+
+# Part2: Inspection results by Cuisines
+```{r}
+data <- data %>%
+  rename(CUISINE = `CUISINE DESCRIPTION`)
+
+data %>%
+  drop_na(CUISINE) %>%
+  group_by(CUISINE) %>%
+  dplyr::summarise(
+    cuisine_count = n()
+  ) %>%
+  arrange(desc(cuisine_count)) %>%
+  head(10)
+
+top_cuisines <- data %>%
+  drop_na(CUISINE) %>%
+  group_by(CUISINE) %>%
+  dplyr::summarise(
+    cuisine_count = n()
+  ) %>%
+  arrange(desc(cuisine_count)) %>%
+  head(20) 
+
+data %>%
+  drop_na(CUISINE, SCORE) %>%
+  filter(CUISINE %in% top_cuisines$CUISINE) %>%
+  ggplot(aes(x = SCORE, y = reorder(CUISINE,SCORE,median))) +
+    geom_boxplot(fill="#9FC29F") +
+    labs(title="Inspection Scores by CUISINE",
+         x="Inspection Scores",
+         y="CUISINE") +
+    theme_grey(13)
+```
+```{r}
+test3 <- chisq.test(data$SCORE, data$BORO)
+print(test3)
+```
+According to the visualization, Indian, Spanish, Latin American, Chinese, and Caribbean have top5 highest median of the inspection scores, which means that these cuisines didn't get really good inspection results. Sandwiches, American, Coffee/Tea, Hamburgers, and Donuts have top5 lowest median of the inspection scores, which means that these cuisines got really good inspection results. Compared to the other cuisines, Sandwiches, Coffee/Tea, Hamburgers, and Donuts are easier to make than other cuisines, so it is understandable that they have less chance to have sanity problems. Note that American food has low inspection score, and we can assume it is because American foods include foods such as Sandwiches, Coffee, Hamburgers, and Donuts. Also, according to the chi-square test, there is strong evidence, which is very small p-value, that there is association between inspection scores and cuisines.
+
+### Critical flags by Cuisines
+```{r}
+subset5 <- data %>%
+  rename(critical_flag = 'CRITICAL FLAG') %>%
+  drop_na(critical_flag, CUISINE)
+
+subset5 %>%
+  filter(CUISINE %in% top_cuisines$CUISINE) %>%
+  group_by(CUISINE) %>%
+  count(critical_flag) %>%
+  pivot_wider(
+    names_from = critical_flag, values_from = n
+  ) %>%
+  rename(Not_Critical = `Not Critical`, Not_Applicable = `Not Applicable`) %>%
+  mutate(cf_prop = Critical/(Critical + Not_Critical + Not_Applicable)) %>%
+  arrange(desc(cf_prop)) 
+```
+Similar to the result of inspection scores by cuisines, Indian, Asian, Chinese, Spanish, and Thai cuisines have top5 critical flag proportions. And Coffee/Tea, Donuts, and Hamburgers have low critical flag proportions. However, note that all the top 20 cuisines have around 50% critical flag proportion.
+
+
+## Part3: Sort some restaurants out based on Critical flags and Inspection Scores
+
+## Sort out by Critical flags 
+```{r}
+subset7 <- data %>%
+  rename(critical_flag = 'CRITICAL FLAG') %>%
+  drop_na(DBA, critical_flag) %>%
+  group_by(DBA) %>%
+  count(critical_flag) %>%
+  pivot_wider(
+    names_from = critical_flag, values_from = n
+  ) %>%
+  rename(Not_Critical = `Not Critical`, Not_Applicable = `Not Applicable`) %>%
+  mutate(
+    Not_Applicable = ifelse(is.na(Not_Applicable), 0, Not_Applicable),
+    Not_Critical = ifelse(is.na(Not_Critical), 0, Not_Critical),
+    Critical = ifelse(is.na(Critical), 0, Critical),
+    Total = Critical + Not_Critical + Not_Applicable) %>%
+  mutate(cf_prop = Critical/(Critical + Not_Critical + Not_Applicable)) %>%
+  arrange(desc(cf_prop))
+```
+```{r}
+mean(subset7$Critical)
+mean(subset7$Total)
+```
+The average number of the critical flags per restaurant is around 5, and the mean of the total inspection cases is around 9 per restaurant for last three years (2020-2023).
+
+```{r}
+subset7 %>%
+  filter(Total > 10) %>%
+  head(20)
+```
+These are top10 highest critical flag proportion restaurants among restaurants whose total inspection cases are above 10 cases for the last three years.
+
+```{r}
+subset7 %>%
+  filter(Total > 10) %>%
+  tail(20)
+```
+These are top20 lowest critical flag proportion restaurants among restaurants whose total inspection cases are above 10 for the last three years.
+
+```{r}
+#mean of the critical flag proportion for all inspected restaurants
+mean(subset7$cf_prop)
+
+subset7 %>%
+  arrange(desc(Critical))
+```
+These are top10 highest accumulated critical flag restaurants for last three years. Since these restaurants are mostly chain restaurants, which have a number of restaurants in NYC. So the result is understandable that these chain restaurants have high accumulated critical flags. And note that these chain restaurants are mostly under the mean of the critical flag proportion for all inspected restaurants (0.5), so it is hard to say chain restaurants have more critical flags than other restaurants.
+
+```{r}
+bd_by_cfprop <- subset7 %>%
+  filter(Total > 10) %>%
+  head(40)
+gd_by_cfprop <- subset7 %>%
+  filter(Total > 10) %>%
+  tail(40)
+
+# left join DBA
+loc = data[!duplicated(data$DBA), c("DBA", "Latitude", "Longitude")]
+bd_by_cfprop <- left_join(bd_by_cfprop, loc, by = c("DBA" = "DBA"))
+#bd_by_score <- left_join(bd_by_score, loc, by = c("DBA" = "DBA"))
+gd_by_cfprop <- left_join(gd_by_cfprop, loc, by = c("DBA" = "DBA"))
+#gd_by_score <- left_join(gd_by_score, loc, by = c("DBA" = "DBA"))
+
+# check overlap
+# merge_bd <- rbind(bd_by_cfprop, bd_by_score)
+# merge_bd <- distinct(merge_bd, DBA, .keep_all = TRUE)
+# merge_bd <- merge_bd[, c("DBA", "cf_prop", "avg_score", "Latitude", "Longitude")]
+# merge_bd$grade = 0
+# merge_gd <- rbind(gd_by_cfprop, gd_by_score)
+# merge_gd <- distinct(merge_gd, DBA, .keep_all = TRUE)
+# merge_gd <- merge_gd[, c("DBA", "cf_prop", "avg_score", "Latitude", "Longitude")]
+# merge_gd$grade = 1
+bd_by_cfprop <- bd_by_cfprop[, c("DBA", "cf_prop", "Latitude", "Longitude")]
+bd_by_cfprop$Grade = "bad"
+gd_by_cfprop <- gd_by_cfprop[, c("DBA", "cf_prop", "Latitude", "Longitude")]
+gd_by_cfprop$Grade = "good"
+merge_bdgd <- rbind(bd_by_cfprop, gd_by_cfprop)
+colnames(merge_bdgd)[colnames(merge_bdgd) == "cf_prop"] = "Critical_Flag_Proportion"
+colnames(merge_bdgd)[colnames(merge_bdgd) == "DBA"] = "Restaurant_Name"
+#write.csv(merge_bdgd, "tidydata.csv", row.names=FALSE)
+```
+
+### Interactive plot for sorting restaurants out by Critical Flag proportion. 
+```{r map-chunk, fig.show='asis'}
+# interactive map - score vs long and lat
+# filter the data
+tmap_data = merge_bdgd
+
+# Convert restaurant data to sf object
+tmapdata_sf <- st_as_sf(tmap_data, coords = c("Longitude", "Latitude"), crs = 4326)
+
+tmapdata_sf$color <- ifelse(tmapdata_sf$Grade == "bad", "red","green")
+
+# Set tmap to view mode
+tmap_mode("view")
+# Plot the base map
+tm_base <- tm_shape(nyc_neighborhoods) +
+  tm_borders() +
+  tm_fill(col = "grey", alpha = 0.5) +
+  tm_layout(frame = FALSE)
+  
+
+# Add the restaurant scores with custom colors
+tm_restaurants <- tm_shape(tmapdata_sf) +
+  tm_symbols(
+    size = 0.1, # Replace 'size' with the name of the variable determining the size of the symbols
+    col = "color", # The color column created based on the grade
+    border.col = "black",
+    border.alpha = 0.5,
+    title.col = "Restaurant Score",
+    shape = 21, # Shape 21 is a filled circle, similar to a bubble
+    popup.vars = c("Restaurant_Name" = "Restaurant_Name", "Grade" = "Grade", "Critical_Flag_Proportion" = "Critical_Flag_Proportion")
+  )
+
+
+# +
+#   tm_bubbles(size = 0.5, col = "color", 
+#              border.col = "black", border.alpha = 0.5,
+#              title.col = "Restaurant Score",
+#              style = "pretty",
+#              labels = "1")
+
+
+# Combine the layers and print the map
+tm_map <- tm_base + tm_restaurants + tm_add_legend("fill", col = c("red", "green"), 
+                labels = c("Bad", "Good"),
+                title = "Legend",
+                size = 1)
+ 
+# tmap_save(tm_map, "try_map.html")
+```
+<iframe src="try_map.html" width="100%" height="400"></iframe>
+
+## Sort out by Inspection scores
+```{r}
+subset8 <- data %>%
+  drop_na(DBA, SCORE) %>%
+  filter(GRADE %in% c("A", "B", "C")) %>%
+  group_by(DBA) %>%
+  dplyr::summarise(cases = n(), avg_score = mean(SCORE)) %>%
+  arrange(desc(avg_score)) 
+```
+```{r}
+subset8 %>%
+  filter(cases > 10) %>%
+  select(DBA, avg_score) 
+```
+These are top20 highest inspection scores (high score is bad) restaurants among restaurant whose total inspection cases are above 10 for last three years.
+
+```{r}
+subset8 %>%
+  filter(cases > 10) %>%
+  tail(20)
+```
+These are top20 lowest inspection scores (low score is good) restaurants whose total inspection cases are above 10 for last three years.
+
+
+## Part4: Violation description by word cloud 
+```{r}
+rest_cf <- subset7 %>%
+  filter(Total > 10) %>%
+  head(100) %>%
+  select(DBA)
+
+rest_score <- subset8 %>%
+  filter(cases > 10) %>%
+  head(100) %>%
+  select(DBA)
+
+rests <- c(rest_cf$DBA,rest_score$DBA)
+```
+```{r}
+subset4 <- data %>%
+  rename(VIOLATION = "VIOLATION DESCRIPTION") %>%
+  drop_na(VIOLATION) %>%
+  filter(DBA %in% rests)
+
+words <- tokenize_words(subset4$VIOLATION, stopwords = stopwords::stopwords("en"))
+
+# violation <- vector()
+# for (i in 1:nrow(subset4)) {
+#     for (j in 1:length(words[[i]])){
+#           violation <- c(final_vector, words[[i]][j])
+#     }
+# }
+# 
+# df <- as.data.frame(violation)
+#write.csv(violation, "violation.csv", row.names=FALSE)
+
+df <- read_csv("violation.csv")
+df <- df %>%
+  rename(violation = x) %>%
+  count(violation) %>%
+  filter(!violation %in% c("food", "held", "f", "non", "properly")) %>%
+  arrange(desc(n)) %>%
+  rename(freq = n) 
+wordcloud2(data = df, size = 0.75, shape = 'circle', minSize = 10)
+```
+This is a wordcloud from top100 highest critical flag proportion restaurants and top100 highest inspection scores (high score means bad result) restaurants among all the restaurants whose total inspection cases are above 10 for last three years.
+

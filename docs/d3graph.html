@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>YOUR PROJECT TITLE - 4&nbsp; Interactive graph</title>
+<title>NYCRestaurant_Inspection - 4&nbsp; Interactive graph</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -89,9 +89,9 @@ ul.task-list li input[type="checkbox"] {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">YOUR PROJECT TITLE</a> 
+      <a href="./">NYCRestaurant_Inspection</a> 
         <div class="sidebar-tools-main">
-    <a href="https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME" rel="" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="https://github.com/ChanJin0801/NYCRestaurant_Inspection" rel="" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
 </div>
     </div>
       </div>
@@ -164,8 +164,51 @@ ul.task-list li input[type="checkbox"] {
   * {
     font-family: sans-serif;
   }
+  .district:hover {
+    fill: #507afa   ; 
+  }
+  .restaurant:hover {
+    cursor: pointer;
+  }
+  .district {
+    fill: #ccc;
+    stroke: #333;
+    stroke-width: 1px;
+  }
+  #tooltip {
+    position: absolute;
+    visibility: hidden; 
+    background-color: white; 
+    color: black; 
+    padding: 10px;
+    border: 1px solid #ddd;
+    border: 1px solid #ddd;
+    border-radius: 8px; 
+    z-index: 1000; 
+    pointer-events: none; 
+    opacity: 0.85; 
+  }
+  .district-label {
+    fill: grey; 
+    text-anchor: middle;
+    font-size: 12px; 
+    color: grey;
+    
+    }
 </style>
+<button id="zoom_in">
+Zoom In
+</button>
+<button id="zoom_out">
+Zoom Out
+</button>
+<div id="tooltip">
+
+</div>
 <div id="plot">
+
+</div>
+<div id="comment">
 
 </div>
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
@@ -427,7 +470,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME/edit/main/d3graph.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME/issues/new" class="toc-action">Report an issue</a></p></div></div></div>
+    <div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ChanJin0801/NYCRestaurant_Inspection/edit/main/d3graph.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/ChanJin0801/NYCRestaurant_Inspection/issues/new" class="toc-action">Report an issue</a></p></div></div></div>
     <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
   </div>
 </footer>
