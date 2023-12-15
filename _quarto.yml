@@ -1,0 +1,31 @@
+project:
+  type: book
+  output-dir: docs
+
+execute:
+  echo: true
+
+book:
+  title: "NYCRestaurant_Inspection"
+  author:
+    - Chanjin Park (cp3366)
+    - Ta-Wei Huang (th3061)
+  repo-url: https://github.com/ChanJin0801/NYCRestaurant_Inspection
+  date: today
+  page-footer:
+    right: |
+      This book was built with <a href="https://quarto.org/">Quarto</a>.
+  repo-actions: [edit, issue]
+  chapters:
+    - index.qmd
+    - data.qmd
+    - results.qmd
+    - d3graph.qmd
+    - conclusion.qmd
+
+format:
+  html:
+    theme: cosmo
+    code-fold: true
+
+
