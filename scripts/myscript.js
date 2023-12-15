@@ -21,7 +21,7 @@ var zoom = d3.zoom()
     });
 
 // Load and visualize GeoJSON data
-d3.json("https://raw.githubusercontent.com/ChanJin0801/NYC_Restaurant_Inspection/main/NYC_City_Council_Districts.geojson").then(function(geojsonData) {
+d3.json("https://raw.githubusercontent.com/ChanJin0801/NYCRestaurant_Inspection/main/NYC_City_Council_Districts.geojson").then(function(geojsonData) {
     var districtData = geojsonData.features.map(function(d) {
         return {
             name: d.properties.name, // replace with actual property name for the district name
@@ -72,7 +72,7 @@ d3.json("https://raw.githubusercontent.com/ChanJin0801/NYC_Restaurant_Inspection
     svg.call(zoom);
 //////////////////////
     // Load and plot points from CSV
-    d3.csv("https://raw.githubusercontent.com/ChanJin0801/NYC_Restaurant_Inspection/main/tidydata.csv").then(function(data) {
+    d3.csv("https://raw.githubusercontent.com/ChanJin0801/NYCRestaurant_Inspection/main/tidydata.csv").then(function(data) {
 
         data.forEach(function(d) {
             console.log(d.Grade)
